@@ -17,9 +17,10 @@ def q1() -> str:
     Cypher must return two columns named `book` and `title`. `book` is the
     Book entity's `id` (e.g., 'book:1'). Result set: 5 rows.
     """
-    # TODO: Match every :Book and return its id (alias `book`) and its
-    #       `title` property.
-    return ""
+    return """
+MATCH (b:Book)
+RETURN b.id AS book, b.title AS title
+"""
 
 
 def q2() -> str:
@@ -29,8 +30,11 @@ def q2() -> str:
     Strict greater-than. Cypher must return columns named `book` (id string)
     and `year` (int). On the fixture: 1 row.
     """
-    # TODO: Match every :Book, filter on year > 2010, return id and year.
-    return ""
+    return """
+MATCH (b:Book)
+WHERE b.year > 2010
+RETURN b.id AS book, b.year AS year
+"""
 
 
 def q3() -> str:
@@ -41,9 +45,10 @@ def q3() -> str:
     (id string) and `author_name` (the Author's `name` property).
     On the fixture: 7 rows.
     """
-    # TODO: Traverse :Book -[:AUTHORED_BY]-> :Author and return the book
-    #       id and the author's name.
-    return ""
+    return """
+MATCH (b:Book)-[:AUTHORED_BY]->(a:Author)
+RETURN b.id AS book, a.name AS author_name
+"""
 
 
 def q4() -> str:
@@ -54,10 +59,11 @@ def q4() -> str:
     is NULL. Columns: `book` (id string), `topic` (string or NULL).
     On the fixture: 5 rows; one row has `topic` = NULL (book:2).
     """
-    # TODO: Match every :Book, OPTIONAL-match its `topic` property (or its
-    #       :ON_TOPIC edge — pick one canonical source and document it),
-    #       and return id and topic.
-    return ""
+    return """
+MATCH (b:Book)
+OPTIONAL MATCH (b)-[:ON_TOPIC]->(t:Topic)
+RETURN b.id AS book, t.name AS topic
+"""
 
 
 def q5() -> str:
@@ -71,7 +77,10 @@ def q5() -> str:
     On the fixture, book:1 (Hunt + Thomas) and book:5 (Fowler + Martin)
     both have multiple authors, so the expected value is TRUE.
     """
-    # TODO: Return a one-row, one-column boolean. EXISTS { ... } or a
-    #       count-based predicate both work; the autograder checks the
-    #       single boolean value, not the shape of the predicate.
-    return ""
+    return """
+RETURN EXISTS {
+  MATCH (b:Book)-[:AUTHORED_BY]->(a1:Author)
+  MATCH (b)-[:AUTHORED_BY]->(a2:Author)
+  WHERE a1 <> a2
+} AS result
+"""

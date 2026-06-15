@@ -6,30 +6,39 @@ placeholder `pytest.fail("Not implemented")`.
 
 A driver fixture (`driver`) is provided via conftest.py — it points at
 the same Neo4j instance the autograder uses, with the drill fixtures
-already loaded. Run a Cypher string in a session like:
-
-    with driver.session() as session:
-        rows = list(session.run(cypher_str, params))
-
-Test ideas:
-  - Confirm `q1_list_recipes()` returns exactly the 5 recipe names you
-    expect from `recipes_mini.cypher`.
-  - Confirm `q2_filter_by_cuisine("Italian")` returns the two Italian
-    recipes only — no Chinese or Sichuan recipes.
-  - Confirm `q3_subclass_traversal("Chinese")` includes Sichuan recipes
-    (via :SUBCLASS_OF) but `q2_filter_by_cuisine("Chinese")` does not.
+already loaded.
 """
-
-import pytest
 
 from queries.warmups import q1_list_recipes, q2_filter_by_cuisine, q3_subclass_traversal
 
 
 def test_q1_list_recipes_returns_all_five(driver):
-    """Replace this body with your own assertion(s)."""
-    pytest.fail("Not implemented — write your test here")
+    cypher = q1_list_recipes()
+
+    with driver.session() as session:
+        rows = [record["name"] for record in session.run(cypher)]
+
+    assert len(rows) == 5
+    assert all(isinstance(name, str) for name in rows)
+    assert all(name.strip() for name in rows)
 
 
 def test_q3_traversal_picks_up_subclasses(driver):
-    """Replace this body with your own assertion(s)."""
-    pytest.fail("Not implemented — write your test here")
+    direct_cypher, direct_params = q2_filter_by_cuisine("Chinese")
+    traversal_cypher, traversal_params = q3_subclass_traversal("Chinese")
+
+    with driver.session() as session:
+        direct_rows = {
+            record["name"]
+            for record in session.run(direct_cypher, direct_params)
+        }
+
+        traversal_rows = {
+            record["name"]
+            for record in session.run(traversal_cypher, traversal_params)
+        }
+
+    assert direct_rows
+    assert traversal_rows
+    assert direct_rows.issubset(traversal_rows)
+    assert len(traversal_rows) > len(direct_rows)
